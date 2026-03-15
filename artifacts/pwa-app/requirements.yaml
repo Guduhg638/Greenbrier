@@ -1,0 +1,20 @@
+packages:
+  "framer-motion": "For page transitions, smooth modal reveals, and polished micro-interactions"
+  "@hookform/resolvers": "For robust form validation using Zod with react-hook-form"
+  "react-hook-form": "For performant, flexible, and extensible forms with easy-to-use validation"
+  "date-fns": "For formatting human-readable relative dates like '2 days ago'"
+  "clsx": "For constructing className strings conditionally"
+  "tailwind-merge": "For merging tailwind classes without style conflicts"
+
+images:
+  - path: "artifacts/pwa-app/public/images/auth-bg.png"
+    description: "Minimalist, professional, abstract gradient mesh in very soft blues and whites. Trustworthy, clean, subtle."
+    aspect_ratio: "16:9"
+  - path: "artifacts/pwa-app/public/images/hero-abstract.png"
+    description: "Clean, corporate, subtle geometric abstract background in light gray and soft blue. Professional, safe, trustworthy."
+    aspect_ratio: "16:9"
+
+notes:
+  - Using generated Orval hooks from @workspace/api-client-react for all API interactions.
+  - Using wouter for client-side routing.
+  - Assuming standard shadcn-like UI components exist in src/components/ui as per directory structure.

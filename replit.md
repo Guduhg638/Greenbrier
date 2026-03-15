@@ -1,8 +1,8 @@
-# Workspace
+# FlagIt — People Review App
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+FlagIt is a full-stack anonymous people review app. Verified users can leave green flag (good) or red flag (bad) reviews with 1–5 star ratings about anyone. All reviews are anonymous to protect reviewers.
 
 ## Stack
 
@@ -14,83 +14,77 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Auth**: bcryptjs + express-session + connect-pg-simple
+- **Email**: nodemailer (logs to console if SMTP not configured)
+- **Frontend**: React + Vite + Tailwind + shadcn/ui + React Query + Framer Motion
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server
+│   └── pwa-app/            # React + Vite frontend (FlagIt)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
+│   ├── api-client-react/   # Generated React Query hooks (with credentials: include)
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
 ```
 
-## TypeScript & Composite Projects
+## Database Schema
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- **users** — email, password_hash, display_name, email_verified, is_mod, verification_token
+- **people** — name, slug, description, review_count, good_count, bad_count, avg_rating
+- **reviews** — person_id, reviewer_user_id, flag_type (good/bad), rating (1-5), text, report_count, removed
+- **reports** — review_id, reporter_user_id, reason, details, status (pending/resolved/dismissed)
+- **user_sessions** — auto-created by connect-pg-simple
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## API Routes (all under /api)
 
-## Root Scripts
+- `GET /healthz` — health check
+- `POST /auth/signup` — create account
+- `POST /auth/login` — log in
+- `POST /auth/logout` — log out
+- `GET /auth/me` — get current user
+- `POST /auth/verify-email` — verify email with token
+- `POST /auth/resend-verification` — resend verification email
+- `GET /people/search?q=` — search people
+- `POST /people` — create person profile (verified users)
+- `GET /people/:slug` — get person profile
+- `GET /people/:slug/reviews` — get reviews for person
+- `POST /people/:slug/reviews` — leave review (verified users)
+- `POST /reviews/:id/report` — report a review (authenticated users)
+- `GET /feed` — recent reviews feed
+- `GET /moderation/reports` — get flagged reports (mods only)
+- `PUT /moderation/reports/:id` — resolve/dismiss report (mods only)
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## Frontend Pages
 
-## Packages
+- `/` — Home: hero search + recent activity feed
+- `/search?q=` — Search results
+- `/person/:slug` — Person profile with rating summary + all reviews
+- `/person/new` — Create a new person profile
+- `/login` — Login
+- `/signup` — Sign up
+- `/verify-email?token=` — Email verification
+- `/mod` — Mod dashboard (mods only)
 
-### `artifacts/api-server` (`@workspace/api-server`)
+## Key Features
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+- **Anonymous reviews** — no reviewer identity shown
+- **Email verification gate** — must verify to post reviews
+- **Green/Red flags** — visual flag system on every review
+- **Star ratings** — 1–5 stars
+- **Report system** — anyone can report a review
+- **Mod dashboard** — mods can resolve/dismiss reports and remove reviews
+- **Community guidelines** — safety-first design
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## Email Setup
 
-### `lib/db` (`@workspace/db`)
+By default, verification links are logged to the API server console (no SMTP needed for development). To enable real email sending, set:
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+## Making a User a Mod
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+Run SQL directly: `UPDATE users SET is_mod = true WHERE email = 'email@example.com';`

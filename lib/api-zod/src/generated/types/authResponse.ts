@@ -5,7 +5,9 @@
  * People Review App API
  * OpenAPI spec version: 0.1.0
  */
+import type { CurrentUser } from "./currentUser";
 
-export interface HealthStatus {
-  status: string;
+export interface AuthResponse {
+  user: CurrentUser;
+  message: string;
 }

@@ -5,7 +5,8 @@
  * People Review App API
  * OpenAPI spec version: 0.1.0
  */
+import type { Review } from "./review";
 
-export interface HealthStatus {
-  status: string;
+export interface FeedItem {
+  review: Review;
 }

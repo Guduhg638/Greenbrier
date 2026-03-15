@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: People Review App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: people
+    description: People profile operations
+  - name: reviews
+    description: Review operations
+  - name: feed
+    description: Feed operations
+  - name: moderation
+    description: Moderation operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,415 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: User created, verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Verify email with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/resend-verification:
+    post:
+      operationId: resendVerification
+      tags: [auth]
+      summary: Resend verification email
+      responses:
+        "200":
+          description: Email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Already verified or not logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /people/search:
+    get:
+      operationId: searchPeople
+      tags: [people]
+      summary: Search people by name
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: Name to search
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeopleListResponse"
+
+  /people:
+    post:
+      operationId: createPerson
+      tags: [people]
+      summary: Create a new person profile (verified users only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonRequest"
+      responses:
+        "201":
+          description: Person created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Email not verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /people/{slug}:
+    get:
+      operationId: getPersonBySlug
+      tags: [people]
+      summary: Get a person's profile and reviews
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Person profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonProfile"
+        "404":
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /people/{slug}/reviews:
+    get:
+      operationId: getPersonReviews
+      tags: [reviews]
+      summary: Get all reviews for a person
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Reviews list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewsListResponse"
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Leave a review for a person (verified users only)
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Email not verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /reviews/{id}/report:
+    post:
+      operationId: reportReview
+      tags: [reviews]
+      summary: Report a review
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportReviewRequest"
+      responses:
+        "201":
+          description: Report submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Already reported or error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get recent reviews feed
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedResponse"
+
+  /moderation/reports:
+    get:
+      operationId: getModerationReports
+      tags: [moderation]
+      summary: Get pending reports (mod only)
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, resolved, dismissed]
+            default: pending
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportsListResponse"
+        "403":
+          description: Not a moderator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /moderation/reports/{id}:
+    put:
+      operationId: resolveReport
+      tags: [moderation]
+      summary: Resolve or dismiss a report (mod only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveReportRequest"
+      responses:
+        "200":
+          description: Report updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Not a moderator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +448,264 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 50
+      required: [email, password, displayName]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    VerifyEmailRequest:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+
+    CurrentUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        displayName:
+          type: string
+        emailVerified:
+          type: boolean
+        isMod:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, email, displayName, emailVerified, isMod, createdAt]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/CurrentUser"
+        message:
+          type: string
+      required: [user, message]
+
+    CreatePersonRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+      required: [name]
+
+    PersonProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        avgRating:
+          type: number
+          nullable: true
+        reviewCount:
+          type: integer
+        goodCount:
+          type: integer
+        badCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, slug, description, avgRating, reviewCount, goodCount, badCount, createdAt]
+
+    PeopleListResponse:
+      type: object
+      properties:
+        people:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonProfile"
+        total:
+          type: integer
+      required: [people, total]
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        flagType:
+          type: string
+          enum: [good, bad]
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        text:
+          type: string
+          minLength: 10
+          maxLength: 1000
+      required: [flagType, rating, text]
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        personId:
+          type: integer
+        personName:
+          type: string
+        personSlug:
+          type: string
+        flagType:
+          type: string
+          enum: [good, bad]
+        rating:
+          type: integer
+        text:
+          type: string
+        reportCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, personId, personName, personSlug, flagType, rating, text, reportCount, createdAt]
+
+    ReviewsListResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [reviews, total, page, limit]
+
+    ReportReviewRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum: [fake, harmful, personal_info, spam, other]
+        details:
+          type: string
+          maxLength: 500
+      required: [reason]
+
+    FeedItem:
+      type: object
+      properties:
+        review:
+          $ref: "#/components/schemas/Review"
+      required: [review]
+
+    FeedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [items, total, page, limit]
+
+    ModerationReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        reviewId:
+          type: integer
+        reviewText:
+          type: string
+        reviewFlagType:
+          type: string
+        personName:
+          type: string
+        personSlug:
+          type: string
+        reason:
+          type: string
+        details:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, reviewId, reviewText, reviewFlagType, personName, personSlug, reason, details, status, createdAt]
+
+    ReportsListResponse:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModerationReport"
+        total:
+          type: integer
+      required: [reports, total]
+
+    ResolveReportRequest:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [resolve, dismiss]
+        removeReview:
+          type: boolean
+      required: [action]
