@@ -30,7 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-md shadow-primary/20">
               <FlagTriangleRight className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">FlagIt</span>
+            <span className="font-display font-bold text-xl tracking-tight">Greenbrier Circle</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -166,7 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <FlagTriangleRight className="w-4 h-4" />
-            <span className="font-display font-bold">FlagIt</span>
+            <span className="font-display font-bold">Greenbrier Circle</span>
             <span className="text-sm">© {new Date().getFullYear()}</span>
           </div>
           <div className="text-sm text-muted-foreground">

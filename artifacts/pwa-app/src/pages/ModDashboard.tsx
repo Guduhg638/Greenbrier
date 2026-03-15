@@ -44,7 +44,7 @@ export default function ModDashboard() {
         </div>
         <div>
           <h1 className="text-3xl font-bold font-display">Moderation Panel</h1>
-          <p className="text-muted-foreground">Review community reports and keep FlagIt safe.</p>
+          <p className="text-muted-foreground">Review community reports and keep Greenbrier Circle safe.</p>
         </div>
       </div>
 

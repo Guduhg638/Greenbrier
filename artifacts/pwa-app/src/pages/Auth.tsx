@@ -84,7 +84,7 @@ function AuthLayout({ mode, form, setForm, onSubmit, isPending }: any) {
             {isLogin ? 'Welcome back' : 'Create an account'}
           </h1>
           <p className="text-center text-muted-foreground mb-8">
-            {isLogin ? 'Enter your details to sign in.' : 'Join the FlagIt community.'}
+            {isLogin ? 'Enter your details to sign in.' : 'Join the Greenbrier Circle community.'}
           </p>
 
           <form onSubmit={onSubmit} className="space-y-4">

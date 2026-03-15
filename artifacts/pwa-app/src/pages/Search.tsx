@@ -47,11 +47,11 @@ export default function Search() {
           </div>
           <h3 className="text-2xl font-bold mb-3">No matches found</h3>
           <p className="text-muted-foreground max-w-md mx-auto mb-8">
-            We couldn't find anyone matching "{q}". They might not be on FlagIt yet.
+            We couldn't find anyone matching "{q}". They might not be on Greenbrier Circle yet.
           </p>
           <Link href={`/person/new?name=${encodeURIComponent(q)}`}>
             <Button size="lg" className="rounded-xl px-8 shadow-md">
-              <UserPlus className="w-5 h-5 mr-2" /> Add them to FlagIt
+              <UserPlus className="w-5 h-5 mr-2" /> Add them to Greenbrier Circle
             </Button>
           </Link>
         </div>

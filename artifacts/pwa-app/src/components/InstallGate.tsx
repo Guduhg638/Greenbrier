@@ -127,7 +127,7 @@ export default function InstallGate({ children }: InstallGateProps) {
           fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 10px",
           textAlign: "center", letterSpacing: "-0.5px", fontFamily: "Inter, sans-serif",
         }}>
-          FlagIt
+          Greenbrier Circle
         </h1>
         <p style={{
           fontSize: 15, color: "rgba(255,255,255,0.55)", margin: 0,

@@ -1,6 +1,6 @@
 {
-  "name": "My App",
-  "short_name": "My App",
+  "name": "Greenbrier Circle",
+  "short_name": "Greenbrier",
   "description": "Install this app to your home screen for the best experience.",
   "start_url": "/",
   "display": "standalone",

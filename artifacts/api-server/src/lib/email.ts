@@ -30,9 +30,9 @@ export async function sendVerificationEmail(
   }
 
   await transporter.sendMail({
-    from: process.env.SMTP_FROM || "noreply@flagit.app",
+    from: process.env.SMTP_FROM || "noreply@greenbriercirlce.app",
     to: email,
-    subject: "Verify your FlagIt email address",
+    subject: "Verify your Greenbrier Circle email address",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2>Verify your email</h2>

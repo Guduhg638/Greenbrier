@@ -41,7 +41,7 @@ export default function Home() {
               Who are you dealing with?
             </h1>
             <p className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl">
-              FlagIt is the anonymous, trustworthy community for leaving real reviews about the people in your life. Protect others. Stay safe.
+              Greenbrier Circle is the anonymous, trustworthy community for leaving real reviews about the people in your life. Protect others. Stay safe.
             </p>
 
             <form onSubmit={handleSearch} className="w-full max-w-xl relative flex items-center">

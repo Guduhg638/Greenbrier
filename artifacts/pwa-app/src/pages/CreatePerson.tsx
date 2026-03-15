@@ -30,7 +30,7 @@ export default function CreatePerson() {
 
     createMut.mutate({ data: form }, {
       onSuccess: (person) => {
-        toast({ title: "Success", description: `${person.name} has been added to FlagIt.` });
+        toast({ title: "Success", description: `${person.name} has been added to Greenbrier Circle.` });
         setLocation(`/person/${person.slug}`);
       },
       onError: (err: any) => {
@@ -52,7 +52,7 @@ export default function CreatePerson() {
         </h1>
         <p className="text-muted-foreground mt-2">
           Create a profile for someone so the community can leave reviews. 
-          Make sure they aren't already on FlagIt.
+          Make sure they aren't already on Greenbrier Circle.
         </p>
       </div>
 
